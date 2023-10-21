@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -39,18 +39,57 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    app.get('/product/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
 
   app.post('/product',async (req , res ) =>{
     const newProduct = req.body;
     const result  = await productCollection.insertOne(newProduct);
     res.send(result);
   })
-    // brand side
 
+
+
+
+  app.put('/product/:id', async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const option = {upsert :true};
+    const updateProduct = req.body;
+    const update = {
+      $set:{
+        name:updateProduct.name,
+        imageURL:updateProduct.imageURL,brandName:updateProduct.brandName,
+        price:updateProduct.price,description:updateProduct.description,category:updateProduct.category,
+      }
+    }
+    const result = await productCollection.updateOne(filter,update,option);
+    res.send(result);
+  });
+
+
+  app.delete('/product/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await productCollection.deleteOne(query);
+    res.send(result);
+  });
+    // brand side
+// jfjifvifvi
       app.get('/brand', async (req, res) => {
       const cursor = brandCollection.find();
       const result = await cursor.toArray();
       res.send(result);
+    });
+    app.get('/productsByBrand/:brandId', async (req, res) => {
+      const brandId = req.params.brandId;
+      const query = { brandId: brandId }; // Modify the query to match your data structure
+      const products = await productCollection.find(query).toArray();
+      res.send(products);
     });
 
   app.post('/brand',async (req , res ) =>{
